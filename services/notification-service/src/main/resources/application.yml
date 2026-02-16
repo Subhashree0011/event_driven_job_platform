@@ -1,0 +1,108 @@
+server:
+  port: 8084
+  tomcat:
+    threads:
+      max: 30
+      min-spare: 5
+
+spring:
+  application:
+    name: notification-service
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 1
+
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.platform.*
+        max.poll.records: 10
+        max.poll.interval.ms: 300000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:noreply@jobplatform.com}
+    password: ${MAIL_PASSWORD:changeme}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
+# Retry configuration
+notification:
+  retry:
+    max-attempts: 3
+    initial-interval: 1000      # ms
+    multiplier: 2.0             # exponential backoff
+    max-interval: 30000         # 30s cap
+  deduplication:
+    ttl: 86400                  # 24h — idempotency window in Redis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: notification-service
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      emailCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+      smsCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+  retry:
+    instances:
+      emailRetry:
+        max-attempts: 3
+        wait-duration: 2s
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
+
+logging:
+  level:
+    com.platform.notification: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  data:
+    redis:
+      host: redis
+  kafka:
+    bootstrap-servers: kafka:9092

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Job Match</title>
+</head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background-color: #059669; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h1 style="color: white; margin: 0;">New Job Match 🎯</h1>
+    </div>
+    <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 8px 8px;">
+        <p>Hi <strong th:text="${userName}">User</strong>,</p>
+        <p>We found a job that matches your profile!</p>
+        
+        <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Position:</strong> <span th:text="${jobTitle}">Software Engineer</span></p>
+            <p style="margin: 5px 0;"><strong>Company:</strong> <span th:text="${companyName}">Acme Corp</span></p>
+            <p style="margin: 5px 0;"><strong>Location:</strong> <span th:text="${location}">Remote</span></p>
+        </div>
+        
+        <p>Visit the platform to learn more and apply!</p>
+        
+        <p style="color: #6b7280; font-size: 12px; margin-top: 30px;">
+            &copy; <span th:text="${year}">2026</span> Job Platform. All rights reserved.
+        </p>
+    </div>
+</body>
+</html>

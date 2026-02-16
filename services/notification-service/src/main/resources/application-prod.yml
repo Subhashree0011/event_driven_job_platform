@@ -1,0 +1,37 @@
+# Notification Service — application-prod.yml
+# Production overrides — secrets injected via environment variables
+# Note: No datasource — notification-service is event-driven (Redis + Kafka only)
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      auto-offset-reset: latest
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+notification:
+  websocket:
+    allowed-origins: ${ALLOWED_ORIGINS:*}
+
+logging:
+  level:
+    com.platform.notification: INFO
