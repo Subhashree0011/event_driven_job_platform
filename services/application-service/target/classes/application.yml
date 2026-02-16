@@ -1,0 +1,122 @@
+server:
+  port: 8083
+  tomcat:
+    threads:
+      max: 50
+      min-spare: 10
+
+spring:
+  application:
+    name: application-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/application_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: platform
+    password: platformpass
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: ApplicationServiceHikariPool
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        # Use READ COMMITTED for write-heavy service
+        connection:
+          isolation: 2
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  kafka:
+    bootstrap-servers: localhost:9093
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    consumer:
+      group-id: application-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.platform.*
+
+# Outbox pattern configuration
+outbox:
+  polling-interval: 1000     # ms — how often outbox poller checks for unpublished events
+  batch-size: 100            # max events per poll cycle
+  retry-max-attempts: 5
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: application-service
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      databaseCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+      kafkaCircuitBreaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+  bulkhead:
+    instances:
+      applicationBulkhead:
+        max-concurrent-calls: 25
+        max-wait-duration: 500ms
+
+logging:
+  level:
+    com.platform.application: DEBUG
+    org.hibernate.SQL: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:mysql://mysql:3306/application_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+  jpa:
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: redis
+  kafka:
+    bootstrap-servers: kafka:9092
