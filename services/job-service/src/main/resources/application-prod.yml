@@ -1,0 +1,46 @@
+# Job Service — application-prod.yml
+# Production overrides — secrets injected via environment variables
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    producer:
+      acks: all
+    properties:
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+server:
+  tomcat:
+    threads:
+      max: 100
+      min-spare: 20
+
+cache:
+  job-search:
+    ttl: 60
+  job-detail:
+    ttl: 300
+
+logging:
+  level:
+    com.platform.job: INFO
+    org.hibernate.SQL: ERROR
