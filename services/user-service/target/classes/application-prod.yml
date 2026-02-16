@@ -1,0 +1,37 @@
+# User Service — application-prod.yml
+# Production overrides — secrets injected via environment variables
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  jpa:
+    hibernate:
+      ddl-auto: none        # Never auto-DDL in production
+    show-sql: false
+
+jwt:
+  secret: ${JWT_SECRET}
+
+server:
+  tomcat:
+    threads:
+      max: 100
+      min-spare: 20
+
+logging:
+  level:
+    com.platform.user: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: ERROR
